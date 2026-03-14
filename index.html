@@ -55,29 +55,29 @@
 
     #gameContainer{
       position:absolute;
-      left:50%;
-      top:50%;
-      width:100vw;
-      height:100vh;
-      transform:translate(-50%, -50%);
-      transform-origin:center center;
+      inset:0;
+      width:100%;
+      height:100%;
       background:#000;
       overflow:hidden;
     }
 
-    #gameContainer canvas,
-    #gameContainer iframe,
-    #gameContainer > div,
-    #gameContainer .emscripten,
-    #gameContainer .gameCanvas{
+    #gameContainer canvas{
       position:absolute !important;
       left:50% !important;
       top:50% !important;
       transform:translate(-50%, -50%) !important;
       transform-origin:center center !important;
       margin:0 !important;
-      max-width:none !important;
-      max-height:none !important;
+      display:block !important;
+    }
+
+    #gameContainer .logo,
+    #gameContainer .logo.Dark{
+      background-image:url("TemplateData/progressLogo.Dark.png") !important;
+      background-repeat:no-repeat !important;
+      background-position:center center !important;
+      background-size:contain !important;
     }
 
     .footer{
@@ -128,59 +128,6 @@
       font-weight:700;
       color:#fff;
       white-space:nowrap;
-    }
-
-    #unityProgressWrap{
-      position:fixed;
-      inset:0;
-      z-index:2000;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(0,0,0,.82);
-      pointer-events:none;
-    }
-
-    #unityProgressBox{
-      width:min(86vw, 420px);
-      padding:22px 18px;
-      border-radius:16px;
-      background:rgba(18,18,22,.95);
-      border:1px solid rgba(255,255,255,.12);
-      box-shadow:0 10px 35px rgba(0,0,0,.45);
-      text-align:center;
-    }
-
-    #unityProgressLogo{
-      display:block;
-      width:min(260px, 70vw);
-      max-width:100%;
-      margin:0 auto 14px auto;
-      object-fit:contain;
-    }
-
-    #unityProgressText{
-      font-size:14px;
-      font-weight:700;
-      color:#dcecff;
-      margin-bottom:10px;
-    }
-
-    #unityProgressBar{
-      width:100%;
-      height:14px;
-      border-radius:999px;
-      background:rgba(255,255,255,.10);
-      overflow:hidden;
-      box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
-    }
-
-    #unityProgressFill{
-      width:0%;
-      height:100%;
-      border-radius:999px;
-      background:linear-gradient(90deg, #5ee1ff, #8cffbf);
-      transition:width .15s linear;
     }
 
     #staticMenu{
@@ -314,16 +261,13 @@
         height:34px;
         background-size:18px 18px;
       }
-
-      #unityProgressText{
-        font-size:13px;
-      }
     }
   </style>
 
+  <script src="TemplateData/UnityProgress.js"></script>
   <script src="Build/UnityLoader.js"></script>
 </head>
-<body>
+<body style="background-color:black;">
 
   <div class="webgl-content">
     <div id="gameShell">
@@ -334,16 +278,6 @@
       <div class="webgl-logo" aria-hidden="true"></div>
       <div class="fullscreen" onclick="if(window.gameInstance){window.gameInstance.SetFullscreen(1);}" title="Fullscreen" aria-label="Fullscreen button"></div>
       <div class="title">Bad Piggies (Local Build)</div>
-    </div>
-  </div>
-
-  <div id="unityProgressWrap" aria-live="polite">
-    <div id="unityProgressBox">
-      <img id="unityProgressLogo" src="TemplateData/progressLogo.Dark.png" alt="Bad Piggies loading">
-      <div id="unityProgressText">Loading Bad Piggies...</div>
-      <div id="unityProgressBar">
-        <div id="unityProgressFill"></div>
-      </div>
     </div>
   </div>
 
@@ -368,12 +302,30 @@
       return "Are you sure you want to leave? Your session may be interrupted.";
     };
 
-    function setCanvasSizeAndCenter() {
+    function replaceBadProgressLogo() {
+      var badUrl = "https://cdn.jsdelivr.net/gh/67-Factory/web-ports@main/badpiggies/TemplateData/progressLogo.Dark.png";
+      var goodUrl = "TemplateData/progressLogo.Dark.png";
+
+      var imgs = document.querySelectorAll("img");
+      for (var i = 0; i < imgs.length; i++) {
+        var src = imgs[i].getAttribute("src") || "";
+        if (src.indexOf(badUrl) !== -1 || src.indexOf("progressLogo.Dark.png") !== -1) {
+          imgs[i].setAttribute("src", goodUrl);
+        }
+      }
+
+      var nodes = document.querySelectorAll("*");
+      for (var j = 0; j < nodes.length; j++) {
+        var bg = window.getComputedStyle(nodes[j]).backgroundImage || "";
+        if (bg.indexOf("progressLogo.Dark.png") !== -1 && bg.indexOf("TemplateData/progressLogo.Dark.png") === -1) {
+          nodes[j].style.backgroundImage = 'url("TemplateData/progressLogo.Dark.png")';
+        }
+      }
+    }
+
+    function fitUnityCanvas() {
       var container = document.getElementById("gameContainer");
       if (!container) return;
-
-      container.style.width = window.innerWidth + "px";
-      container.style.height = window.innerHeight + "px";
 
       var canvas = container.querySelector("canvas");
       if (!canvas) return;
@@ -381,12 +333,15 @@
       var baseWidth = parseInt(canvas.getAttribute("width"), 10) || 960;
       var baseHeight = parseInt(canvas.getAttribute("height"), 10) || 600;
 
-      var scale = Math.min(window.innerWidth / baseWidth, window.innerHeight / baseHeight);
-      var displayWidth = Math.round(baseWidth * scale);
-      var displayHeight = Math.round(baseHeight * scale);
+      var screenWidth = window.innerWidth;
+      var screenHeight = window.innerHeight;
 
-      canvas.style.width = displayWidth + "px";
-      canvas.style.height = displayHeight + "px";
+      var scale = Math.min(screenWidth / baseWidth, screenHeight / baseHeight);
+      var renderWidth = Math.round(baseWidth * scale);
+      var renderHeight = Math.round(baseHeight * scale);
+
+      canvas.style.width = renderWidth + "px";
+      canvas.style.height = renderHeight + "px";
       canvas.style.left = "50%";
       canvas.style.top = "50%";
       canvas.style.transform = "translate(-50%, -50%)";
@@ -395,41 +350,30 @@
       canvas.style.display = "block";
     }
 
-    function watchForUnityCanvas() {
+    function watchUnityElements() {
       var container = document.getElementById("gameContainer");
       if (!container) return;
 
       var observer = new MutationObserver(function () {
-        setCanvasSizeAndCenter();
+        replaceBadProgressLogo();
+        fitUnityCanvas();
       });
 
-      observer.observe(container, { childList: true, subtree: true });
+      observer.observe(container, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["style", "src", "class"]
+      });
 
-      setInterval(setCanvasSizeAndCenter, 500);
+      setInterval(function () {
+        replaceBadProgressLogo();
+        fitUnityCanvas();
+      }, 400);
     }
 
-    function UnityProgress(gameInstance, progress) {
-      var wrap = document.getElementById("unityProgressWrap");
-      var fill = document.getElementById("unityProgressFill");
-      var text = document.getElementById("unityProgressText");
-
-      if (fill) {
-        fill.style.width = Math.max(0, Math.min(1, progress)) * 100 + "%";
-      }
-
-      if (text) {
-        text.textContent = progress >= 1 ? "Starting Bad Piggies..." : "Loading Bad Piggies... " + Math.round(progress * 100) + "%";
-      }
-
-      if (progress >= 1 && wrap) {
-        setTimeout(function () {
-          wrap.style.display = "none";
-        }, 500);
-      }
-    }
-
-    watchForUnityCanvas();
-    window.addEventListener("resize", setCanvasSizeAndCenter);
+    watchUnityElements();
+    window.addEventListener("resize", fitUnityCanvas);
 
     window.gameInstance = UnityLoader.instantiate("gameContainer", "Build/Bad Piggies.json", {
       onProgress: UnityProgress
