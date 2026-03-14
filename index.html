@@ -10,7 +10,7 @@
 
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
   <link rel="stylesheet" href="TemplateData/style.css">
-  <link rel="icon" type="image/png" href="Assets/static/icon.png">
+  <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/StaticQuasar931/Images@main/icon.png">
 
   <style>
     :root{
@@ -32,23 +32,52 @@
 
     body{
       position:relative;
+      background:#000;
     }
 
     .webgl-content{
       position:fixed;
       inset:0;
-      width:100%;
-      height:100%;
+      width:100vw;
+      height:100vh;
       background:#000;
       overflow:hidden;
     }
 
-    #gameContainer{
+    #gameShell{
       position:absolute;
       inset:0;
-      width:100vw !important;
-      height:100vh !important;
-      background:#000 center center / cover no-repeat;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      background:#000;
+    }
+
+    #gameContainer{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:100vw;
+      height:100vh;
+      transform:translate(-50%, -50%);
+      transform-origin:center center;
+      background:#000;
+      overflow:hidden;
+    }
+
+    #gameContainer canvas,
+    #gameContainer iframe,
+    #gameContainer > div,
+    #gameContainer .emscripten,
+    #gameContainer .gameCanvas{
+      position:absolute !important;
+      left:50% !important;
+      top:50% !important;
+      transform:translate(-50%, -50%) !important;
+      transform-origin:center center !important;
+      margin:0 !important;
+      max-width:none !important;
+      max-height:none !important;
     }
 
     .footer{
@@ -99,6 +128,59 @@
       font-weight:700;
       color:#fff;
       white-space:nowrap;
+    }
+
+    #unityProgressWrap{
+      position:fixed;
+      inset:0;
+      z-index:2000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,.82);
+      pointer-events:none;
+    }
+
+    #unityProgressBox{
+      width:min(86vw, 420px);
+      padding:22px 18px;
+      border-radius:16px;
+      background:rgba(18,18,22,.95);
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:0 10px 35px rgba(0,0,0,.45);
+      text-align:center;
+    }
+
+    #unityProgressLogo{
+      display:block;
+      width:min(260px, 70vw);
+      max-width:100%;
+      margin:0 auto 14px auto;
+      object-fit:contain;
+    }
+
+    #unityProgressText{
+      font-size:14px;
+      font-weight:700;
+      color:#dcecff;
+      margin-bottom:10px;
+    }
+
+    #unityProgressBar{
+      width:100%;
+      height:14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.10);
+      overflow:hidden;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+
+    #unityProgressFill{
+      width:0%;
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg, #5ee1ff, #8cffbf);
+      transition:width .15s linear;
     }
 
     #staticMenu{
@@ -232,21 +314,36 @@
         height:34px;
         background-size:18px 18px;
       }
+
+      #unityProgressText{
+        font-size:13px;
+      }
     }
   </style>
 
-  <script src="TemplateData/UnityProgress.js"></script>
   <script src="Build/UnityLoader.js"></script>
 </head>
-<body style="background-color:black;">
+<body>
 
   <div class="webgl-content">
-    <div id="gameContainer"></div>
+    <div id="gameShell">
+      <div id="gameContainer"></div>
+    </div>
 
     <div class="footer">
       <div class="webgl-logo" aria-hidden="true"></div>
       <div class="fullscreen" onclick="if(window.gameInstance){window.gameInstance.SetFullscreen(1);}" title="Fullscreen" aria-label="Fullscreen button"></div>
       <div class="title">Bad Piggies (Local Build)</div>
+    </div>
+  </div>
+
+  <div id="unityProgressWrap" aria-live="polite">
+    <div id="unityProgressBox">
+      <img id="unityProgressLogo" src="TemplateData/progressLogo.Dark.png" alt="Bad Piggies loading">
+      <div id="unityProgressText">Loading Bad Piggies...</div>
+      <div id="unityProgressBar">
+        <div id="unityProgressFill"></div>
+      </div>
     </div>
   </div>
 
@@ -257,7 +354,7 @@
 
   <div id="staticSlideMenu" aria-live="polite">
     <a id="staticSlideLink" href="https://sites.google.com/view/staticquasar931/google-form" target="_blank" rel="noopener" aria-label="Open Google Form">
-      <img id="staticSlideImg" src="Assets/static/GoogleForm.png" alt="StaticQuasar931 Google Form for feedback and requests">
+      <img id="staticSlideImg" src="https://cdn.jsdelivr.net/gh/StaticQuasar931/Images@main/GoogleForm.png" alt="StaticQuasar931 Google Form for feedback and requests">
     </a>
   </div>
 
@@ -271,15 +368,68 @@
       return "Are you sure you want to leave? Your session may be interrupted.";
     };
 
-    function fitGameToScreen() {
+    function setCanvasSizeAndCenter() {
       var container = document.getElementById("gameContainer");
       if (!container) return;
+
       container.style.width = window.innerWidth + "px";
       container.style.height = window.innerHeight + "px";
+
+      var canvas = container.querySelector("canvas");
+      if (!canvas) return;
+
+      var baseWidth = parseInt(canvas.getAttribute("width"), 10) || 960;
+      var baseHeight = parseInt(canvas.getAttribute("height"), 10) || 600;
+
+      var scale = Math.min(window.innerWidth / baseWidth, window.innerHeight / baseHeight);
+      var displayWidth = Math.round(baseWidth * scale);
+      var displayHeight = Math.round(baseHeight * scale);
+
+      canvas.style.width = displayWidth + "px";
+      canvas.style.height = displayHeight + "px";
+      canvas.style.left = "50%";
+      canvas.style.top = "50%";
+      canvas.style.transform = "translate(-50%, -50%)";
+      canvas.style.position = "absolute";
+      canvas.style.margin = "0";
+      canvas.style.display = "block";
     }
 
-    fitGameToScreen();
-    window.addEventListener("resize", fitGameToScreen);
+    function watchForUnityCanvas() {
+      var container = document.getElementById("gameContainer");
+      if (!container) return;
+
+      var observer = new MutationObserver(function () {
+        setCanvasSizeAndCenter();
+      });
+
+      observer.observe(container, { childList: true, subtree: true });
+
+      setInterval(setCanvasSizeAndCenter, 500);
+    }
+
+    function UnityProgress(gameInstance, progress) {
+      var wrap = document.getElementById("unityProgressWrap");
+      var fill = document.getElementById("unityProgressFill");
+      var text = document.getElementById("unityProgressText");
+
+      if (fill) {
+        fill.style.width = Math.max(0, Math.min(1, progress)) * 100 + "%";
+      }
+
+      if (text) {
+        text.textContent = progress >= 1 ? "Starting Bad Piggies..." : "Loading Bad Piggies... " + Math.round(progress * 100) + "%";
+      }
+
+      if (progress >= 1 && wrap) {
+        setTimeout(function () {
+          wrap.style.display = "none";
+        }, 500);
+      }
+    }
+
+    watchForUnityCanvas();
+    window.addEventListener("resize", setCanvasSizeAndCenter);
 
     window.gameInstance = UnityLoader.instantiate("gameContainer", "Build/Bad Piggies.json", {
       onProgress: UnityProgress
@@ -321,19 +471,19 @@
       var img = document.getElementById("staticSlideImg");
 
       var FORM = {
-        src: "Assets/static/GoogleForm.png",
+        src: "https://cdn.jsdelivr.net/gh/StaticQuasar931/Images@main/GoogleForm.png",
         alt: "StaticQuasar931 Google Form for feedback and requests",
         link: "https://sites.google.com/view/staticquasar931/google-form"
       };
 
       var DISCORD = {
-        src: "Assets/static/Discord.png",
+        src: "https://cdn.jsdelivr.net/gh/StaticQuasar931/Images@main/Join_Our_DC_StaticQuassar931_lcplrf.png",
         alt: "Join the StaticQuasar931 Discord",
         link: "https://discord.gg/DP2hM7RRhR"
       };
 
       var INSTA = {
-        src: "Assets/static/Instagram.png",
+        src: "https://cdn.jsdelivr.net/gh/StaticQuasar931/Images@main/Follow-us--IG",
         alt: "StaticQuasar931 Instagram",
         link: "https://www.instagram.com/freeschoolgamepage/"
       };
