@@ -309,7 +309,7 @@
       var imgs = document.querySelectorAll("img");
       for (var i = 0; i < imgs.length; i++) {
         var src = imgs[i].getAttribute("src") || "";
-        if (src.indexOf(badUrl) !== -1 || src.indexOf("progressLogo.Dark.png") !== -1) {
+        if (src.indexOf(badUrl) !== -1) {
           imgs[i].setAttribute("src", goodUrl);
         }
       }
@@ -317,7 +317,7 @@
       var nodes = document.querySelectorAll("*");
       for (var j = 0; j < nodes.length; j++) {
         var bg = window.getComputedStyle(nodes[j]).backgroundImage || "";
-        if (bg.indexOf("progressLogo.Dark.png") !== -1 && bg.indexOf("TemplateData/progressLogo.Dark.png") === -1) {
+        if (bg.indexOf(badUrl) !== -1) {
           nodes[j].style.backgroundImage = 'url("TemplateData/progressLogo.Dark.png")';
         }
       }
@@ -330,8 +330,8 @@
       var canvas = container.querySelector("canvas");
       if (!canvas) return;
 
-      var baseWidth = parseInt(canvas.getAttribute("width"), 10) || 960;
-      var baseHeight = parseInt(canvas.getAttribute("height"), 10) || 600;
+      var baseWidth = parseInt(canvas.getAttribute("width"), 10) || canvas.width || 960;
+      var baseHeight = parseInt(canvas.getAttribute("height"), 10) || canvas.height || 600;
 
       var screenWidth = window.innerWidth;
       var screenHeight = window.innerHeight;
@@ -369,7 +369,7 @@
       setInterval(function () {
         replaceBadProgressLogo();
         fitUnityCanvas();
-      }, 400);
+      }, 250);
     }
 
     watchUnityElements();
