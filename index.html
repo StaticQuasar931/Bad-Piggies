@@ -10,14 +10,13 @@
 
   <link rel="shortcut icon" href="TemplateData/favicon.ico">
   <link rel="stylesheet" href="TemplateData/style.css">
-  <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/StaticQuasar931/Images@main/icon.png">
+  <link rel="icon" type="image/png" href="Assets/static/icon.png">
 
   <style>
     :root{
       --brand:#5ee1ff;
       --glow:0 0 12px rgba(94,225,255,.65), 0 0 32px rgba(155,255,183,.35);
       --shadow:0 10px 30px rgba(0,0,0,.4);
-      --footer-h:52px;
     }
 
     html, body{
@@ -61,13 +60,14 @@
       display:flex;
       align-items:center;
       gap:12px;
-      min-height:var(--footer-h);
+      min-height:52px;
       padding:8px 14px;
       border-radius:14px;
       background:rgba(0,0,0,.62);
       backdrop-filter:blur(8px);
       box-shadow:0 10px 30px rgba(0,0,0,.45);
       border:1px solid rgba(255,255,255,.12);
+      max-width:calc(100vw - 24px);
     }
 
     .webgl-logo{
@@ -83,9 +83,7 @@
       border-radius:10px;
       cursor:pointer;
       flex:0 0 auto;
-      background:
-        rgba(255,255,255,.08)
-        url("TemplateData/fullscreen.png") center center / 20px 20px no-repeat;
+      background:rgba(255,255,255,.08) url("TemplateData/fullscreen.png") center center / 20px 20px no-repeat;
       border:1px solid rgba(255,255,255,.14);
       transition:transform .18s ease, background-color .18s ease, box-shadow .18s ease;
     }
@@ -103,7 +101,6 @@
       white-space:nowrap;
     }
 
-    /* Static Menu */
     #staticMenu{
       position:fixed;
       left:12px;
@@ -143,7 +140,6 @@
       to{opacity:1; transform:translateY(0)}
     }
 
-    /* Rotating slide-in widget */
     #staticSlideMenu{
       position:fixed;
       bottom:24px;
@@ -154,6 +150,7 @@
       pointer-events:none;
       opacity:0;
       transform:translateX(140px) scale(.96);
+      display:block;
     }
 
     #staticSlideMenu a{
@@ -173,8 +170,13 @@
       transition:opacity .25s ease;
     }
 
-    .slide-in{ animation:slideIn 2s ease forwards; }
-    .slide-out{ animation:slideOut 2s ease forwards; }
+    .slide-in{
+      animation:slideIn 2s ease forwards;
+    }
+
+    .slide-out{
+      animation:slideOut 2s ease forwards;
+    }
 
     @keyframes slideIn{
       from{opacity:0; transform:translateX(140px) scale(.96)}
@@ -200,7 +202,6 @@
         bottom:8px;
         gap:10px;
         padding:8px 12px;
-        max-width:calc(100vw - 24px);
       }
 
       .title{
@@ -220,11 +221,6 @@
       #staticSlideMenu{
         width:88px;
         height:88px;
-      }
-
-      .footer{
-        width:auto;
-        max-width:calc(100vw - 20px);
       }
 
       .webgl-logo{
@@ -249,7 +245,7 @@
 
     <div class="footer">
       <div class="webgl-logo" aria-hidden="true"></div>
-      <div class="fullscreen" onclick="if(window.gameInstance){gameInstance.SetFullscreen(1);}" title="Fullscreen" aria-label="Fullscreen button"></div>
+      <div class="fullscreen" onclick="if(window.gameInstance){window.gameInstance.SetFullscreen(1);}" title="Fullscreen" aria-label="Fullscreen button"></div>
       <div class="title">Bad Piggies (Local Build)</div>
     </div>
   </div>
@@ -261,25 +257,35 @@
 
   <div id="staticSlideMenu" aria-live="polite">
     <a id="staticSlideLink" href="https://sites.google.com/view/staticquasar931/google-form" target="_blank" rel="noopener" aria-label="Open Google Form">
-      <img id="staticSlideImg" src="https://cdn.jsdelivr.net/gh/StaticQuasar931/Images@main/GoogleForm.png" alt="StaticQuasar931 Google Form for feedback and requests">
+      <img id="staticSlideImg" src="Assets/static/GoogleForm.png" alt="StaticQuasar931 Google Form for feedback and requests">
     </a>
   </div>
 
   <div class="seo-hidden" aria-hidden="true">
     <h1>Bad Piggies unblocked game by StaticQuasar931</h1>
-    <p>Play Bad Piggies in a browser with a local Unity WebGL build, fullscreen support, Static menu, and rotating quick links by StaticQuasar931.</p>
+    <p>Play Bad Piggies in your browser using a local Unity WebGL build with fullscreen support and StaticQuasar931 visual SEO.</p>
   </div>
 
   <script>
-    **window.onbeforeunload = function () {
+    window.onbeforeunload = function () {
       return "Are you sure you want to leave? Your session may be interrupted.";
-    };**
+    };
 
-    **var gameInstance = UnityLoader.instantiate("gameContainer", "Build/Bad Piggies.json", {
+    function fitGameToScreen() {
+      var container = document.getElementById("gameContainer");
+      if (!container) return;
+      container.style.width = window.innerWidth + "px";
+      container.style.height = window.innerHeight + "px";
+    }
+
+    fitGameToScreen();
+    window.addEventListener("resize", fitGameToScreen);
+
+    window.gameInstance = UnityLoader.instantiate("gameContainer", "Build/Bad Piggies.json", {
       onProgress: UnityProgress
-    });**
+    });
 
-    **(function () {
+    (function () {
       var menu = document.getElementById("staticMenu");
       var btn = document.getElementById("closeStaticMenu");
       var KEY = "sq931_staticMenu_hidden_until";
@@ -304,54 +310,55 @@
         showMenu();
       }
 
-      if (btn) btn.onclick = hideFor3Minutes;
-    })();**
+      if (btn) {
+        btn.onclick = hideFor3Minutes;
+      }
+    })();
 
-    **(function () {
+    (function () {
       var wrap = document.getElementById("staticSlideMenu");
       var link = document.getElementById("staticSlideLink");
       var img = document.getElementById("staticSlideImg");
 
       var FORM = {
-        src: "https://cdn.jsdelivr.net/gh/StaticQuasar931/Images@main/GoogleForm.png",
+        src: "Assets/static/GoogleForm.png",
         alt: "StaticQuasar931 Google Form for feedback and requests",
         link: "https://sites.google.com/view/staticquasar931/google-form"
       };
 
       var DISCORD = {
-        src: "https://cdn.jsdelivr.net/gh/StaticQuasar931/Images@main/Join_Our_DC_StaticQuassar931_lcplrf.png",
+        src: "Assets/static/Discord.png",
         alt: "Join the StaticQuasar931 Discord",
         link: "https://discord.gg/DP2hM7RRhR"
       };
 
       var INSTA = {
-        src: "https://cdn.jsdelivr.net/gh/StaticQuasar931/Images@main/Follow-us--IG",
+        src: "Assets/static/Instagram.png",
         alt: "StaticQuasar931 Instagram",
         link: "https://www.instagram.com/freeschoolgamepage/"
       };
 
       var ROTATION = [FORM, DISCORD, INSTA];
+      var idx = 0;
+      var T_IN = 2000;
+      var T_SHOW = 5000;
+      var T_OUT = 2000;
+      var T_HIDDEN = 20000;
+
       for (var i = 0; i < ROTATION.length; i++) {
         var preload = new Image();
         preload.src = ROTATION[i].src;
       }
 
-      var T_IN = 2000;
-      var T_SHOW = 5000;
-      var T_OUT = 2000;
-      var T_HIDDEN = 20000;
-      var idx = 0;
-
       function applyState(state) {
         link.href = state.link;
+        link.setAttribute("aria-label", state.alt);
         img.alt = state.alt;
         img.style.opacity = "0";
         setTimeout(function () {
           img.src = state.src;
-        }, 80);
-        img.onload = function () {
           img.style.opacity = "1";
-        };
+        }, 80);
       }
 
       function delay(ms) {
@@ -360,24 +367,32 @@
         });
       }
 
-      (async function cycle() {
+      async function cycle() {
         while (true) {
           applyState(ROTATION[idx]);
           wrap.style.pointerEvents = "auto";
           wrap.classList.remove("slide-out");
           wrap.classList.add("slide-in");
+
           await delay(T_IN + T_SHOW);
+
           wrap.classList.remove("slide-in");
           wrap.classList.add("slide-out");
+
           await delay(T_OUT);
+
           wrap.style.pointerEvents = "none";
+
           await delay(T_HIDDEN);
+
           idx = (idx + 1) % ROTATION.length;
         }
-      })();
-    })();**
+      }
 
-    **(function () {
+      cycle();
+    })();
+
+    (function () {
       var idsToToggle = ["staticMenu", "staticSlideMenu"];
       var seq = [];
       var target = ["y", "u", "i"];
@@ -387,8 +402,9 @@
           var el = document.getElementById(idsToToggle[i]);
           if (!el) continue;
 
-          var hidden = (el.style.display === "none" || getComputedStyle(el).display === "none");
-          if (hidden) {
+          var currentlyHidden = el.style.display === "none" || window.getComputedStyle(el).display === "none";
+
+          if (currentlyHidden) {
             el.style.display = idsToToggle[i] === "staticMenu" ? "flex" : "block";
           } else {
             el.style.display = "none";
@@ -399,19 +415,12 @@
       window.addEventListener("keydown", function (e) {
         seq.push(String(e.key || "").toLowerCase());
         if (seq.length > 3) seq.shift();
+
         if (seq.join("") === target.join("")) {
           toggleAllVisualSeo();
         }
       });
-    })();**
-
-    **window.addEventListener("resize", function () {
-      var container = document.getElementById("gameContainer");
-      if (container) {
-        container.style.width = window.innerWidth + "px";
-        container.style.height = window.innerHeight + "px";
-      }
-    });**
+    })();
   </script>
 </body>
 </html>
